@@ -1,0 +1,33 @@
+.Header {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    background-color: rgba(128, 0, 128, 0.5);
+}
+.Wrapper {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+.Routes {
+    display: flex;
+    width: 10%;
+    align-items: center;
+    justify-content: space-between;
+}
+.Button {
+    padding: 10px;
+    font-size: 25px;
+    font-weight: bold;
+    border-radius: 10px;
+    text-decoration: none;
+    color: black;
+    &:hover {
+        background-color: rgba(128, 0, 128, 0.9);
+        color: white;
+        text-decoration: none;
+    }
+}

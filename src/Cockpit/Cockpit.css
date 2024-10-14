@@ -1,0 +1,21 @@
+.CockpitContainer {
+    display: flex;
+    justify-content: space-between;
+
+}
+.CockpitContainer2 {
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+}
+
+.wrapper2 {
+    /*width: min-content;*/
+    margin: 20px;
+    /*width: 500px;*/
+    /*width: 100%;*/
+    height: max-content;
+    background-color: rgba(128, 0, 128, 0.1);
+    padding: 5px;
+    border-radius: 10px;
+}

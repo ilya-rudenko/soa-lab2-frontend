@@ -8,6 +8,7 @@ import Home from "./Home/Home";
 import LabworkPage from "./LabworkPage/LabworkPage";
 import Cockpit from "./Cockpit/Cockpit";
 import BARS from "./BARS/BARS";
+import Faculties from "./Faculties/Faculties";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route exact path="/" element={<Home />} />
         <Route exact path="/labworks/:id" element={<LabworkPage />} />
         <Route exact path="/cockpit" element={<Cockpit />} />
+        <Route exact path="/faculties" element={<Faculties />} />
         <Route exact path="/bars" element={<BARS />} />
       </Routes>
     </div>

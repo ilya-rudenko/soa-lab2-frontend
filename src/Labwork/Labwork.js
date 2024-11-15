@@ -43,7 +43,12 @@ function Labwork({
 
   return (
     <div className="Labwork" key={id}>
-      <div>{name}</div>
+      <div
+        style={{ textWrap: "wrap", width: "70%", overflow: "hidden" }}
+        title={name}
+      >
+        {name}
+      </div>
       <div
         style={{
           border: "1px solid black",

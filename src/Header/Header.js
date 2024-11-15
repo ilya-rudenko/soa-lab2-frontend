@@ -19,6 +19,15 @@ function Header() {
           <Link to={"/cockpit"} className="Link">
             <div className="Button">Cockpit</div>
           </Link>
+          <div
+            style={{ padding: "10px", fontSize: "25px", fontWeight: "bold" }}
+          >
+            {" "}
+            |
+          </div>
+          <Link to={"/faculties"} className="Link">
+            <div className="Button">Faculties</div>
+          </Link>
         </div>
         <Link to={"/BARS"} className="Link">
           <div className="Button">BARS</div>

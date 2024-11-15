@@ -28,46 +28,50 @@ function LabworksPage() {
 
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const limit = 7;
+
+  const [limit, setLimit] = useState(7);
 
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(
-      labworkService +
-        "/labworks-service/api/v1/labworks?" +
-        requestString +
-        "&offset=" +
-        currentPage * limit +
-        "&limit=" +
-        limit,
-    )
-      .then(async (response) => {
-        const data = await response.json();
-
-        if (!response.ok) {
-          return Promise.reject(data.messages[0]);
-        }
-
-        setLabworks(data.elements);
-        setTotalPages(Math.ceil(data.totalCount / limit));
-        setError(null);
-      })
-      .catch((error) => {
-        console.log(error);
-        setError(error);
-      });
-  }, [requestString, currentPage]);
-
-  useEffect(() => {
+    console.log(limit);
     fetch(labworkService + "/labworks-service/api/v1/enums/difficulty")
-      .then((res) => {
-        return res.json();
+      .then(async (res) => {
+        let response = await res.json();
+        return response;
       })
       .then((data) => {
         setDifficulties(data);
+
+        fetch(
+          labworkService +
+            "/labworks-service/api/v1/labworks?" +
+            requestString +
+            "&offset=" +
+            currentPage * limit +
+            "&limit=" +
+            limit,
+        )
+          .then(async (response) => {
+            const data = await response.json();
+
+            if (!response.ok) {
+              return Promise.reject(data.messages[0]);
+            }
+
+            setLabworks(data.elements);
+            setTotalPages(Math.ceil(data.totalCount / limit));
+
+            setError(null);
+          })
+          .catch((error) => {
+            setError(error);
+          });
+      })
+      .catch((error) => {
+        if (error.message === "Failed to fetch") setError("No connection");
       });
-  }, []);
+  }, [requestString, currentPage, limit]);
 
   const params = {
     id: "number",
@@ -125,7 +129,7 @@ function LabworksPage() {
   const handleAddSort = () => {
     if (sortParameter !== "") {
       setSorts([...sorts, [sortParameter, sortValue]]);
-      setSortValue(false);
+      // setSortValue(false);
     }
   };
 
@@ -176,135 +180,6 @@ function LabworksPage() {
     setCurrentPage(0);
   };
 
-  const InputField = ({ fieldType }) => {
-    switch (fieldType) {
-      case "number":
-        return (
-          <input
-            autoFocus="autoFocus"
-            onChange={handleNumberInput}
-            value={filterValue}
-          />
-        );
-      case "date":
-        return (
-          <DatePicker
-            showMonthDropdown
-            showYearDropdown
-            dropdownMode="select"
-            dateFormat="dd-MM-yyyy"
-            selected={filterValue}
-            onChange={(date) => setFilterValue(date)}
-          />
-        );
-      case "enum":
-        return (
-          <select
-            onChange={(event) => setFilterValue(event.target.value)}
-            value={filterValue}
-            style={{ width: "215px", height: "24px" }}
-          >
-            <option hidden value="">
-              difficulty
-            </option>
-            {difficulties.map((diff, id) => (
-              <option key={"diff_" + id}>{diff.value}</option>
-            ))}
-          </select>
-        );
-      default:
-        return (
-          <input
-            autoFocus="autoFocus"
-            onChange={(event) => setFilterValue(event.target.value)}
-            value={filterValue}
-          />
-        );
-    }
-  };
-
-  const AddFilters = () => {
-    return (
-      <div className="addFiltersWrapper">
-        <select
-          onChange={(event) => {
-            setFilterValue("");
-            setFilterParameter(event.target.value);
-          }}
-          value={filterParameter}
-        >
-          <option hidden value="">
-            parameter
-          </option>
-          {Object.entries(params).map(([key, value]) => (
-            <option key={"parameter_" + key}>{key}</option>
-          ))}
-        </select>
-        <select
-          onChange={(event) => setFilterOperator(event.target.value)}
-          value={filterOperator}
-        >
-          <option hidden value="">
-            operator
-          </option>
-          {Object.entries(
-            params[filterParameter] === "string"
-              ? stringOperators
-              : allOperators,
-          ).map(([key, value]) => (
-            <option key={"operator_" + key}>{key}</option>
-          ))}
-        </select>
-        <InputField
-          fieldType={
-            filterOperator === "like" ? "string" : params[filterParameter]
-          }
-        />
-        <button className="addButton" onClick={handleAddFilter}>
-          Add
-        </button>
-      </div>
-    );
-  };
-
-  const AddSort = () => {
-    return (
-      <div className="addFiltersWrapper">
-        <select
-          onChange={(event) => {
-            setSortParameter(event.target.value);
-          }}
-          value={sortParameter}
-        >
-          <option hidden value="">
-            parameter
-          </option>
-          {Object.entries(params).map(([key, value]) => (
-            <option key={"parameter_" + key}>{key}</option>
-          ))}
-        </select>
-        <div>
-          <input
-            type="Checkbox"
-            value={sortValue}
-            onChange={(event) => {
-              setSortValue(event.target.checked);
-            }}
-          />
-          Descending
-        </div>
-
-        <button
-          className="addButton"
-          onClick={handleAddSort}
-          style={{ marginLeft: "5px" }}
-        >
-          Add
-        </button>
-      </div>
-    );
-  };
-
   const deleteFilter = (id) => {
     setFilters(filters.filter((_, i) => i !== id));
   };
@@ -324,6 +199,20 @@ function LabworksPage() {
     <div className="wrapper">
       <div className="LabworksList">
         <div className="header">Labworks</div>
+        <div>
+          <div>Number of labworks on page</div>
+          <select
+            onChange={(event) => setLimit(event.target.value)}
+            value={limit}
+          >
+            <option>3</option>
+            <option>5</option>
+            <option>7</option>
+            <option>11</option>
+            <option>13</option>
+            <option>15</option>
+          </select>
+        </div>
         {labworks.map((labwork, i) => (
           <Link to={`/labworks/${labwork.id}`} className="Link">
             <Labwork key={i} {...labwork} />
@@ -339,9 +228,14 @@ function LabworksPage() {
           <button className={"addButton"} onClick={minusPage}>
             {"<"}
           </button>
-          <div>
-            {currentPage + 1} / {totalPages}
-          </div>
+          {totalPages === 0 ? (
+            <div>0 / 0</div>
+          ) : (
+            <div>
+              {currentPage + 1} / {totalPages}
+            </div>
+          )}
+
           <button className={"addButton"} onClick={plusPage}>
             {">"}
           </button>
@@ -351,7 +245,20 @@ function LabworksPage() {
         <div className="FilteringWrapper">
           <div className="header">Filter</div>
           <div className="innerWrapper">
-            <AddFilters />
+            <AddFilters
+              setFilterValue={setFilterValue}
+              setFilterParameter={setFilterParameter}
+              filterParameter={filterParameter}
+              filterOperator={filterOperator}
+              setFilterOperator={setFilterOperator}
+              params={params}
+              stringOperators={stringOperators}
+              allOperators={allOperators}
+              handleAddFilter={handleAddFilter}
+              filterValue={filterValue}
+              handleNumberInput={handleNumberInput}
+              difficulties={difficulties}
+            />
             <div>
               <div className={"header2"} style={{ marginTop: "10px" }}>
                 Filters
@@ -382,7 +289,14 @@ function LabworksPage() {
           </div>
           <div className="header">Sort</div>
           <div className="innerWrapper">
-            <AddSort />
+            <AddSort
+              setSortParameter={setSortParameter}
+              sortParameter={sortParameter}
+              params={params}
+              sortValue={sortValue}
+              setSortValue={setSortValue}
+              handleAddSort={handleAddSort}
+            />
             <div>
               <div className={"header2"} style={{ marginTop: "10px" }}>
                 Sorting
@@ -438,3 +352,153 @@ function LabworksPage() {
     </div>
   );
 }
+
+const AddFilters = ({
+  setFilterValue,
+  setFilterParameter,
+  filterParameter,
+  filterOperator,
+  setFilterOperator,
+  params,
+  stringOperators,
+  allOperators,
+  handleAddFilter,
+  filterValue,
+  handleNumberInput,
+  difficulties,
+}) => {
+  return (
+    <div className="addFiltersWrapper">
+      <select
+        onChange={(event) => {
+          setFilterValue("");
+          setFilterParameter(event.target.value);
+        }}
+        value={filterParameter}
+      >
+        <option hidden value="">
+          parameter
+        </option>
+        {Object.entries(params).map(([key, value]) => (
+          <option key={"parameter_" + key}>{key}</option>
+        ))}
+      </select>
+      <select
+        onChange={(event) => setFilterOperator(event.target.value)}
+        value={filterOperator}
+      >
+        <option hidden value="">
+          operator
+        </option>
+        {Object.entries(
+          params[filterParameter] === "string" ? stringOperators : allOperators,
+        ).map(([key, value]) => (
+          <option key={"operator_" + key}>{key}</option>
+        ))}
+      </select>
+      <InputField
+        filterValue={filterValue}
+        handleNumberInput={handleNumberInput}
+        setFilterValue={setFilterValue}
+        difficulties={difficulties}
+        fieldType={
+          filterOperator === "like" ? "string" : params[filterParameter]
+        }
+      />
+      <button className="addButton" onClick={handleAddFilter}>
+        Add
+      </button>
+    </div>
+  );
+};
+
+const AddSort = ({
+  setSortParameter,
+  sortParameter,
+  params,
+  sortValue,
+  setSortValue,
+  handleAddSort,
+}) => {
+  return (
+    <div className="addFiltersWrapper">
+      <select
+        onChange={(event) => {
+          setSortParameter(event.target.value);
+        }}
+        value={sortParameter}
+      >
+        <option hidden value="">
+          parameter
+        </option>
+        {Object.entries(params).map(([key, value]) => (
+          <option key={"parameter_" + key}>{key}</option>
+        ))}
+      </select>
+      <div>
+        <input
+          type="Checkbox"
+          value={sortValue}
+          onChange={(event) => {
+            setSortValue(event.target.checked);
+          }}
+        />
+        Descending
+      </div>
+
+      <button
+        className="addButton"
+        onClick={handleAddSort}
+        style={{ marginLeft: "5px" }}
+      >
+        Add
+      </button>
+    </div>
+  );
+};
+
+const InputField = ({
+  fieldType,
+  filterValue,
+  handleNumberInput,
+  setFilterValue,
+  difficulties,
+}) => {
+  switch (fieldType) {
+    case "number":
+      return <input onChange={handleNumberInput} value={filterValue} />;
+    case "date":
+      return (
+        <DatePicker
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+          dateFormat="dd-MM-yyyy"
+          selected={filterValue}
+          onChange={(date) => setFilterValue(date)}
+        />
+      );
+    case "enum":
+      return (
+        <select
+          onChange={(event) => setFilterValue(event.target.value)}
+          value={filterValue}
+          style={{ width: "215px", height: "24px" }}
+        >
+          <option hidden value="">
+            difficulty
+          </option>
+          {difficulties.map((diff, id) => (
+            <option key={"diff_" + id}>{diff.value}</option>
+          ))}
+        </select>
+      );
+    default:
+      return (
+        <input
+          onChange={(event) => setFilterValue(event.target.value)}
+          value={filterValue}
+        />
+      );
+  }
+};

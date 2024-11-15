@@ -30,26 +30,38 @@ const Hardcore = () => {
       return;
     }
 
-    fetch(
-      barsService +
-        "/bars-service/api/v1/bars/faculties/" +
-        faculty +
-        "/" +
-        discipline +
-        "/make-hardcore",
-      requestOptions,
-    )
-      .then(async (response) => {
-        const data = await response.json();
-
-        if (!response.ok) {
-          return Promise.reject(data.messages[0]);
-        }
-
-        setError(null);
+    fetch(barsService + "/bars-service/api/v1/bars/ping")
+      .then((res) => {
+        return res.json();
       })
-      .catch((error) => {
-        setError(error);
+      .then((data) => {
+        fetch(
+          barsService +
+            "/bars-service/api/v1/bars/faculties/" +
+            faculty +
+            "/" +
+            discipline +
+            "/make-hardcore",
+          requestOptions,
+        )
+          .then(async (response) => {
+            const res = await response;
+
+            if (!res.ok) {
+              let data = await res.json();
+              return Promise.reject(data.messages[0]);
+            }
+
+            alert("Success!");
+
+            setError(null);
+          })
+          .catch((error) => {
+            setError(error);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   };
 
@@ -97,7 +109,8 @@ const Increase = () => {
   };
   const handleStepsChange = (event) => {
     if (Number(event.target.value)) {
-      setSteps(event.target.value);
+      if (Math.abs(Number(event.target.value)) <= 6)
+        setSteps(event.target.value);
     } else if (event.target.value === "") setSteps("");
     else if (event.target.value === "0") setSteps("0");
   };
@@ -116,25 +129,37 @@ const Increase = () => {
       return;
     }
 
-    fetch(
-      barsService +
-        "/bars-service/api/v1/bars/labworks/" +
-        id +
-        "/difficulty/increase/" +
-        steps,
-      requestOptions,
-    )
-      .then(async (response) => {
-        const res = await response;
-
-        if (!res.ok) {
-          return Promise.reject(res.json().messages[0]);
-        }
-
-        setError(null);
+    fetch(barsService + "/bars-service/api/v1/bars/ping")
+      .then((res) => {
+        return res.json();
       })
-      .catch((error) => {
-        setError(error);
+      .then((data) => {
+        fetch(
+          barsService +
+            "/bars-service/api/v1/bars/labworks/" +
+            id +
+            "/difficulty/increase/" +
+            steps,
+          requestOptions,
+        )
+          .then(async (response) => {
+            const res = await response;
+
+            if (!res.ok) {
+              let data = await res.json();
+              return Promise.reject(data.messages[0]);
+            }
+
+            alert("Success!");
+
+            setError(null);
+          })
+          .catch((error) => {
+            setError(error);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   };
 
@@ -145,7 +170,12 @@ const Increase = () => {
         <div>Id</div> <input value={id} onChange={handleIdChange} />
       </div>
       <div className={"LabworkField"}>
-        <div>Steps</div> <input value={steps} onChange={handleStepsChange} />
+        <div>Steps</div>{" "}
+        <input
+          value={steps}
+          onChange={handleStepsChange}
+          placeholder={"6 max"}
+        />
       </div>
 
       {error && (

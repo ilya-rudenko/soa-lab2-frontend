@@ -17,7 +17,7 @@ function LabworkPage() {
 
   const [name, setName] = useState("");
   const [minimalPoint, setMinimalPoint] = useState("");
-  const [creationDate, setCreationDate] = useState("");
+  // const [creationDate, setCreationDate] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [faculty, setFaculty] = useState("");
   const [disciplineName, setDisciplineName] = useState("");
@@ -30,34 +30,37 @@ function LabworkPage() {
   const [difficulties, setDifficulties] = useState([]);
 
   useEffect(() => {
-    fetch(labworkService + "/labworks-service/api/v1/labworks/" + id)
-      .then((res) => {
-        return res.json();
-      })
-      .then((data) => {
-        setLabwork(data);
-
-        setName(data.name);
-        setMinimalPoint(data.minimalPoint);
-        setCreationDate(data.creationDate);
-        setDifficulty(data.difficulty);
-        setFaculty(data.discipline.faculty);
-        setDisciplineName(data.discipline.name);
-        setSelfStudyHours(data.discipline.selfStudyHours);
-        setX(data.coordinates.x);
-        setY(data.coordinates.y);
-      });
-  }, [error, editMode]);
-
-  useEffect(() => {
     fetch(labworkService + "/labworks-service/api/v1/enums/difficulty")
       .then((res) => {
         return res.json();
       })
       .then((data) => {
         setDifficulties(data);
+
+        fetch(labworkService + "/labworks-service/api/v1/labworks/" + id)
+          .then((res) => {
+            return res.json();
+          })
+          .then((data) => {
+            setLabwork(data);
+
+            setName(data.name);
+            setMinimalPoint(data.minimalPoint);
+            // setCreationDate(data.creationDate);
+            setDifficulty(data.difficulty);
+            setFaculty(data.discipline.faculty);
+            setDisciplineName(data.discipline.name);
+            setSelfStudyHours(data.discipline.selfStudyHours);
+            setX(data.coordinates.x);
+            setY(data.coordinates.y);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
-  }, []);
+  }, [error, editMode]);
+
+  useEffect(() => {}, []);
 
   const handleMinpointInput = (event) => {
     if (Number(event.target.value)) {
@@ -68,7 +71,7 @@ function LabworkPage() {
 
   const handleNameInput = (event) => setName(event.target.value);
 
-  const handleDateInput = (date) => setCreationDate(date);
+  // const handleDateInput = (date) => setCreationDate(date);
 
   const handleDifficultyChange = (event) => setDifficulty(event.target.value);
 
@@ -105,7 +108,7 @@ function LabworkPage() {
         name: name,
         minimalPoint: minimalPoint,
         difficulty: difficulty,
-        creationDate: format(creationDate, "yyyy-MM-dd"),
+        // creationDate: format(creationDate, "yyyy-MM-dd"),
         coordinates: {
           x: Number(x),
           y: Number(y),
@@ -118,22 +121,31 @@ function LabworkPage() {
       }),
     };
 
-    fetch(
-      labworkService + "/labworks-service/api/v1/labworks/" + id,
-      requestOptions,
-    )
-      .then(async (response) => {
-        const data = await response.json();
-
-        if (!response.ok) {
-          return Promise.reject(data.messages[0]);
-        }
-
-        setError(null);
-        setEditMode(false);
+    fetch(labworkService + "/labworks-service/api/v1/enums/difficulty")
+      .then((res) => {
+        return res.json();
       })
-      .catch((error) => {
-        setError(error);
+      .then((data) => {
+        fetch(
+          labworkService + "/labworks-service/api/v1/labworks/" + id,
+          requestOptions,
+        )
+          .then(async (response) => {
+            const data = await response.json();
+
+            if (!response.ok) {
+              return Promise.reject(data.messages[0]);
+            }
+            alert("Success!");
+            setError(null);
+            setEditMode(false);
+          })
+          .catch((error) => {
+            setError(error);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   };
 
@@ -147,20 +159,30 @@ function LabworkPage() {
   const onDelete = () => {
     const requestOptions = { method: "DELETE" };
 
-    fetch(
-      labworkService + "/labworks-service/api/v1/labworks/" + id,
-      requestOptions,
-    )
-      .then(async (response) => {
-        navigate("/labworks", { replace: true });
-        const data = await response.json();
-
-        if (!response.ok) {
-          return Promise.reject(data.messages[0]);
-        }
+    fetch(labworkService + "/labworks-service/api/v1/enums/difficulty")
+      .then((res) => {
+        return res.json();
       })
-      .catch((error) => {
-        setError(error);
+      .then((data) => {
+        fetch(
+          labworkService + "/labworks-service/api/v1/labworks/" + id,
+          requestOptions,
+        )
+          .then(async (response) => {
+            navigate("/labworks", { replace: true });
+            const data = await response.json();
+
+            if (!response.ok) {
+              return Promise.reject(data.messages[0]);
+            }
+            alert("Success!");
+          })
+          .catch((error) => {
+            setError(error);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   };
 
@@ -171,7 +193,7 @@ function LabworkPage() {
           labwork={labwork}
           name={name}
           minimalPoint={minimalPoint}
-          creationDate={creationDate}
+          // creationDate={creationDate}
           difficulty={difficulty}
           faculty={faculty}
           disciplineName={disciplineName}
@@ -180,7 +202,7 @@ function LabworkPage() {
           y={y}
           handleMinpointInput={handleMinpointInput}
           handleNameInput={handleNameInput}
-          handleDateInput={handleDateInput}
+          // handleDateInput={handleDateInput}
           difficulties={difficulties}
           handleDifficultyChange={handleDifficultyChange}
           handleFacultyChange={handleFacultyChange}
@@ -193,7 +215,12 @@ function LabworkPage() {
           error={error}
         />
       ) : (
-        <ViewMode labwork={labwork} onEdit={onEdit} onDelete={onDelete} />
+        <ViewMode
+          labwork={labwork}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          error={error}
+        />
       )}
     </div>
   );
@@ -204,7 +231,7 @@ const EditMode = (props) => {
     labwork,
     name,
     minimalPoint,
-    creationDate,
+    // creationDate,
     difficulty,
     faculty,
     disciplineName,
@@ -213,7 +240,7 @@ const EditMode = (props) => {
     y,
     handleNameInput,
     handleMinpointInput,
-    handleDateInput,
+    // handleDateInput,
     difficulties,
     handleDifficultyChange,
     handleFacultyChange,
@@ -250,21 +277,21 @@ const EditMode = (props) => {
         <div>Minimal point</div>{" "}
         <input value={minimalPoint} onChange={handleMinpointInput} />
       </div>
-      <div className={"LabworkField"}>
-        <div>Creation date</div>
-        <div>
-          <DatePicker
-            className={"DatePicker"}
-            showMonthDropdown
-            // locale="en-US"
-            showYearDropdown
-            dropdownMode="select"
-            dateFormat="dd-MM-yyyy"
-            selected={creationDate}
-            onChange={handleDateInput}
-          />
-        </div>
-      </div>
+      {/*<div className={"LabworkField"}>*/}
+      {/*  <div>Creation date</div>*/}
+      {/*  <div>*/}
+      {/*    <DatePicker*/}
+      {/*      className={"DatePicker"}*/}
+      {/*      showMonthDropdown*/}
+      {/*      // locale="en-US"*/}
+      {/*      showYearDropdown*/}
+      {/*      dropdownMode="select"*/}
+      {/*      dateFormat="dd-MM-yyyy"*/}
+      {/*      selected={creationDate}*/}
+      {/*      onChange={handleDateInput}*/}
+      {/*    />*/}
+      {/*  </div>*/}
+      {/*</div>*/}
       <div className={"LabworkField"}>
         <div>Difficulty</div>
         <select
@@ -290,13 +317,13 @@ const EditMode = (props) => {
             <div>Discipline name</div>
             <input value={disciplineName} onChange={handleDisciplineChange} />
           </div>
-          <div className={"LabworkField"}>
-            <div>Self study hours</div>
-            <input
-              value={selfStudyHours}
-              onChange={handleSelfStudyHoursChange}
-            />
-          </div>
+          {/*<div className={"LabworkField"}>*/}
+          {/*  <div>Self study hours</div>*/}
+          {/*  <input*/}
+          {/*    value={selfStudyHours}*/}
+          {/*    onChange={handleSelfStudyHoursChange}*/}
+          {/*  />*/}
+          {/*</div>*/}
         </div>
       </div>
       <div>
@@ -336,7 +363,7 @@ const EditMode = (props) => {
   );
 };
 
-const ViewMode = ({ labwork, onEdit, onDelete }) => {
+const ViewMode = ({ labwork, onEdit, onDelete, error }) => {
   return (
     <div>
       <div
@@ -351,15 +378,45 @@ const ViewMode = ({ labwork, onEdit, onDelete }) => {
       </div>
       <div className={"LabworkField"}>
         <div>ID</div>
-        <div>{labwork ? labwork.id : null}</div>
+        <div
+          title={labwork ? labwork.id : null}
+          style={{
+            textWrap: "wrap",
+            width: "70%",
+            overflow: "hidden",
+            textAlign: "right",
+          }}
+        >
+          {labwork ? labwork.id : null}
+        </div>
       </div>
       <div className={"LabworkField"}>
         <div>Name</div>
-        <div>{labwork ? labwork.name : null}</div>
+        <div
+          style={{
+            textWrap: "wrap",
+            width: "70%",
+            overflow: "hidden",
+            textAlign: "right",
+          }}
+          title={labwork ? labwork.name : null}
+        >
+          {labwork ? labwork.name : null}
+        </div>
       </div>
       <div className={"LabworkField"}>
         <div>Minimal point</div>{" "}
-        <div>{labwork ? labwork.minimalPoint : null}</div>
+        <div
+          style={{
+            textWrap: "wrap",
+            width: "70%",
+            overflow: "hidden",
+            textAlign: "right",
+          }}
+          title={labwork ? labwork.minimalPoint : null}
+        >
+          {labwork ? labwork.minimalPoint : null}
+        </div>
       </div>
       <div className={"LabworkField"}>
         <div>Creation date</div>
@@ -376,15 +433,45 @@ const ViewMode = ({ labwork, onEdit, onDelete }) => {
         <div style={{ marginLeft: "10px" }}>
           <div className={"LabworkField"}>
             <div>Faculty</div>
-            <div>{labwork ? labwork.discipline.faculty : null}</div>
+            <div
+              style={{
+                textWrap: "wrap",
+                width: "70%",
+                overflow: "hidden",
+                textAlign: "right",
+              }}
+              title={labwork ? labwork.discipline.faculty : null}
+            >
+              {labwork ? labwork.discipline.faculty : null}
+            </div>
           </div>
           <div className={"LabworkField"}>
             <div>Discipline name</div>
-            <div>{labwork ? labwork.discipline.name : null}</div>
+            <div
+              style={{
+                textWrap: "wrap",
+                width: "70%",
+                overflow: "hidden",
+                textAlign: "right",
+              }}
+              title={labwork ? labwork.discipline.name : null}
+            >
+              {labwork ? labwork.discipline.name : null}
+            </div>
           </div>
           <div className={"LabworkField"}>
             <div>Self study hours</div>
-            <div>{labwork ? labwork.discipline.selfStudyHours : null}</div>
+            <div
+              style={{
+                textWrap: "wrap",
+                width: "70%",
+                overflow: "hidden",
+                textAlign: "right",
+              }}
+              title={labwork ? labwork.discipline.selfStudyHours : null}
+            >
+              {labwork ? labwork.discipline.selfStudyHours : null}
+            </div>
           </div>
         </div>
       </div>
@@ -395,14 +482,45 @@ const ViewMode = ({ labwork, onEdit, onDelete }) => {
         <div style={{ marginLeft: "10px" }}>
           <div className={"LabworkField"}>
             <div>X</div>
-            <div>{labwork ? labwork.coordinates.x : null}</div>
+            <div
+              style={{
+                textWrap: "wrap",
+                width: "70%",
+                overflow: "hidden",
+                textAlign: "right",
+              }}
+            >
+              {labwork ? labwork.coordinates.x : null}
+            </div>
           </div>
           <div className={"LabworkField"}>
             <div>Y</div>
-            <div>{labwork ? labwork.coordinates.y : null}</div>
+            <div
+              style={{
+                textWrap: "wrap",
+                width: "70%",
+                overflow: "hidden",
+                textAlign: "right",
+              }}
+            >
+              {labwork ? labwork.coordinates.y : null}
+            </div>
           </div>
         </div>
       </div>
+      {error && (
+        <div
+          className={"LabworkField"}
+          style={{
+            backgroundColor: "red",
+            borderRadius: "10px",
+            margin: "5px",
+            padding: "5px",
+          }}
+        >
+          {error}
+        </div>
+      )}
       <div className={"ButtonsWrapper"}>
         <button onClick={onEdit}>Edit</button>
         <button onClick={onDelete}>Delete</button>

@@ -1,7 +1,5 @@
 import "./Cockpit.css";
 import { useEffect, useState } from "react";
-import DatePicker from "react-datepicker";
-import { format } from "date-fns";
 import { labworkService } from "../fetch";
 
 function Cockpit() {
@@ -41,26 +39,37 @@ const DeleteDisciplineLabworks = () => {
       return;
     }
 
-    fetch(
-      labworkService +
-        "/labworks-service/api/v1/faculties/" +
-        faculty +
-        "/" +
-        disciplineName +
-        "/labworks",
-      requestOptions,
-    )
-      .then(async (response) => {
-        const res = await response;
-
-        if (!res.ok) {
-          return Promise.reject(res.json().messages[0]);
-        }
-
-        setError(null);
+    fetch(labworkService + "/labworks-service/api/v1/enums/difficulty")
+      .then((res) => {
+        return res.json();
       })
-      .catch((error) => {
-        setError(error);
+      .then((data) => {
+        fetch(
+          labworkService +
+            "/labworks-service/api/v1/faculties/" +
+            faculty +
+            "/" +
+            disciplineName +
+            "/labworks",
+          requestOptions,
+        )
+          .then(async (response) => {
+            const res = await response;
+
+            if (!res.ok) {
+              let data = await res.json();
+              return Promise.reject(data.messages[0]);
+            }
+
+            alert("Success!");
+            setError(null);
+          })
+          .catch((error) => {
+            setError(error);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   };
 
@@ -100,7 +109,7 @@ const DeleteDisciplineLabworks = () => {
 const PostDiscipline = () => {
   const [faculty, setFaculty] = useState("");
   const [disciplineName, setDisciplineName] = useState("");
-  const [selfStudyHours, setSelfStudyHours] = useState("0");
+  const [selfStudyHours, setSelfStudyHours] = useState("120");
 
   const [error, setError] = useState(null);
 
@@ -111,7 +120,8 @@ const PostDiscipline = () => {
 
   const handleSelfStudyHoursChange = (event) => {
     if (Number(event.target.value)) {
-      setSelfStudyHours(event.target.value);
+      if (Math.abs(Number(event.target.value)) < 10000)
+        setSelfStudyHours(event.target.value);
     } else if (event.target.value === "") setSelfStudyHours("");
     else if (event.target.value === "0") setSelfStudyHours("0");
   };
@@ -127,21 +137,36 @@ const PostDiscipline = () => {
       }),
     };
 
-    fetch(
-      labworkService + "/labworks-service/api/v1/faculties/disciplines",
-      requestOptions,
-    )
-      .then(async (response) => {
-        const data = await response.json();
+    if (!faculty || !disciplineName || !selfStudyHours) {
+      setError("Missing fields");
+      return;
+    }
 
-        if (!response.ok) {
-          return Promise.reject(data.messages[0]);
-        }
-
-        setError(null);
+    fetch(labworkService + "/labworks-service/api/v1/enums/difficulty")
+      .then((res) => {
+        return res.json();
       })
-      .catch((error) => {
-        setError(error);
+      .then((data) => {
+        fetch(
+          labworkService + "/labworks-service/api/v1/faculties/disciplines",
+          requestOptions,
+        )
+          .then(async (response) => {
+            const data = await response.json();
+
+            if (!response.ok) {
+              return Promise.reject(data.messages[0]);
+            }
+
+            alert("Success!");
+            setError(null);
+          })
+          .catch((error) => {
+            setError(error);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   };
 
@@ -159,7 +184,11 @@ const PostDiscipline = () => {
         </div>
         <div className={"LabworkField"}>
           <div>Self study hours</div>
-          <input value={selfStudyHours} onChange={handleSelfStudyHoursChange} />
+          <input
+            value={selfStudyHours}
+            onChange={handleSelfStudyHoursChange}
+            placeholder={"9999 max"}
+          />
         </div>
       </div>
 
@@ -197,18 +226,37 @@ const PostFaculty = () => {
       }),
     };
 
-    fetch(labworkService + "/labworks-service/api/v1/faculties", requestOptions)
-      .then(async (response) => {
-        const data = await response.json();
+    if (!faculty) {
+      setError("Missing fields");
+      return;
+    }
 
-        if (!response.ok) {
-          return Promise.reject(data.messages[0]);
-        }
-
-        setError(null);
+    fetch(labworkService + "/labworks-service/api/v1/enums/difficulty")
+      .then((res) => {
+        return res.json();
       })
-      .catch((error) => {
-        setError(error);
+      .then((data) => {
+        fetch(
+          labworkService + "/labworks-service/api/v1/faculties",
+          requestOptions,
+        )
+          .then(async (response) => {
+            const data = await response.json();
+
+            if (!response.ok) {
+              return Promise.reject(data.messages[0]);
+            }
+
+            alert("Success!");
+
+            setError(null);
+          })
+          .catch((error) => {
+            setError(error);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   };
 
@@ -248,12 +296,15 @@ const MinPointsSum = () => {
       })
       .then((data) => {
         setSum(data.value);
-      });
+      })
+      .catch((err) => {});
   }, []);
 
   return (
     <div className={"wrapper2"}>
-      <div className={"header2"}>Minimal points sum: {sum ? sum : 0}</div>
+      <div className={"header2"} title={sum ? sum : "undefined"}>
+        Minimal points sum: {sum ? sum : "undefined"}
+      </div>
     </div>
   );
 };
@@ -261,11 +312,10 @@ const MinPointsSum = () => {
 const PostLabwork = () => {
   const [name, setName] = useState("");
   const [minimalPoint, setMinimalPoint] = useState("0");
-  const [creationDate, setCreationDate] = useState(Date.now());
+  // const [creationDate, setCreationDate] = useState(Date.now());
   const [difficulty, setDifficulty] = useState("very_easy");
   const [faculty, setFaculty] = useState("");
   const [disciplineName, setDisciplineName] = useState("");
-  const [selfStudyHours, setSelfStudyHours] = useState("0");
   const [x, setX] = useState("");
   const [y, setY] = useState("");
 
@@ -280,6 +330,9 @@ const PostLabwork = () => {
       })
       .then((data) => {
         setDifficulties(data);
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   }, []);
 
@@ -292,7 +345,7 @@ const PostLabwork = () => {
 
   const handleNameInput = (event) => setName(event.target.value);
 
-  const handleDateInput = (date) => setCreationDate(date);
+  // const handleDateInput = (date) => setCreationDate(date);
 
   const handleDifficultyChange = (event) => setDifficulty(event.target.value);
 
@@ -300,13 +353,6 @@ const PostLabwork = () => {
 
   const handleDisciplineChange = (event) =>
     setDisciplineName(event.target.value);
-
-  const handleSelfStudyHoursChange = (event) => {
-    if (Number(event.target.value)) {
-      setSelfStudyHours(event.target.value);
-    } else if (event.target.value === "") setSelfStudyHours("");
-    else if (event.target.value === "0") setSelfStudyHours("0");
-  };
 
   const handleXChange = (event) => {
     if (Number(event.target.value)) {
@@ -329,7 +375,7 @@ const PostLabwork = () => {
         name: name,
         minimalPoint: minimalPoint,
         difficulty: difficulty,
-        creationDate: format(creationDate, "yyyy-MM-dd"),
+        // creationDate: format(creationDate, "yyyy-MM-dd"),
         coordinates: {
           x: Number(x),
           y: Number(y),
@@ -337,23 +383,37 @@ const PostLabwork = () => {
         discipline: {
           faculty: faculty,
           name: disciplineName,
-          selfStudyHours: selfStudyHours,
         },
       }),
     };
 
-    fetch(labworkService + "/labworks-service/api/v1/labworks/", requestOptions)
-      .then(async (response) => {
-        const data = await response.json();
-
-        if (!response.ok) {
-          return Promise.reject(data.messages[0]);
-        }
-
-        setError(null);
+    fetch(labworkService + "/labworks-service/api/v1/enums/difficulty")
+      .then((res) => {
+        return res.json();
       })
-      .catch((error) => {
-        setError(error);
+      .then((data) => {
+        fetch(
+          labworkService + "/labworks-service/api/v1/labworks/",
+          requestOptions,
+        )
+          .then(async (response) => {
+            const data = await response.json();
+
+            if (!response.ok) {
+              return Promise.reject(data.messages[0]);
+            }
+
+            alert("Success!");
+
+            setError(null);
+          })
+          .catch((error) => {
+            if (error.message === "Failed to fetch") setError("No connection");
+            setError(error);
+          });
+      })
+      .catch((err) => {
+        if (err.message === "Failed to fetch") setError("No connection");
       });
   };
 
@@ -368,21 +428,21 @@ const PostLabwork = () => {
         <div>Minimal point</div>{" "}
         <input value={minimalPoint} onChange={handleMinpointInput} />
       </div>
-      <div className={"LabworkField"}>
-        <div>Creation date</div>
-        <div>
-          <DatePicker
-            className={"DatePicker"}
-            showMonthDropdown
-            // locale="en-US"
-            showYearDropdown
-            dropdownMode="select"
-            dateFormat="dd-MM-yyyy"
-            selected={creationDate}
-            onChange={handleDateInput}
-          />
-        </div>
-      </div>
+      {/*<div className={"LabworkField"}>*/}
+      {/*  <div>Creation date</div>*/}
+      {/*  <div>*/}
+      {/*    <DatePicker*/}
+      {/*      className={"DatePicker"}*/}
+      {/*      showMonthDropdown*/}
+      {/*      // locale="en-US"*/}
+      {/*      showYearDropdown*/}
+      {/*      dropdownMode="select"*/}
+      {/*      dateFormat="dd-MM-yyyy"*/}
+      {/*      selected={creationDate}*/}
+      {/*      onChange={handleDateInput}*/}
+      {/*    />*/}
+      {/*  </div>*/}
+      {/*</div>*/}
       <div className={"LabworkField"}>
         <div>Difficulty</div>
         <select
@@ -408,13 +468,13 @@ const PostLabwork = () => {
             <div>Discipline name</div>
             <input value={disciplineName} onChange={handleDisciplineChange} />
           </div>
-          <div className={"LabworkField"}>
-            <div>Self study hours</div>
-            <input
-              value={selfStudyHours}
-              onChange={handleSelfStudyHoursChange}
-            />
-          </div>
+          {/*<div className={"LabworkField"}>*/}
+          {/*  <div>Self study hours</div>*/}
+          {/*  <input*/}
+          {/*    value={selfStudyHours}*/}
+          {/*    onChange={handleSelfStudyHoursChange}*/}
+          {/*  />*/}
+          {/*</div>*/}
         </div>
       </div>
       <div>
